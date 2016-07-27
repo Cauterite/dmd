@@ -1996,7 +1996,7 @@ code *eq87(elem *e,regm_t *pretregs)
 
         //printf("+eq87(e = %p, *pretregs = %s)\n", e, regm_str(*pretregs));
         assert(e->Eoper == OPeq);
-        retregs = ALLREGS | (*pretregs & mPSW);
+        retregs = ALLREGS | XMMREGS | (*pretregs & mPSW);
         c1 = codelem(e->E2,&retregs,FALSE);
         ty1 = tybasic(e->E1->Ety);
         switch (ty1)
