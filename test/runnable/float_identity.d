@@ -67,13 +67,17 @@ bool test()
 
     void func1(float a = float.init) {
         float b = float.init;
+        __gshared float c;
+        __gshared float d = float.init;
     	assert(a is float.init);
+    	assert(a is b);
+    	assert(a is c);
+    	assert(a is d);
     };
 
-    void func2(float a = float.init) {
-    	float b = float.init;
-    	assert(a is b);
-    };
+    func1();
+    func1(f1);
+    func1(float.init);
 
 	return true;
 }
