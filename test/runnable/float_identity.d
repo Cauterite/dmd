@@ -65,6 +65,16 @@ bool test()
 	assert(is_float_init(f3[1]));
 	assert(is_float_init(f4.x));
 
+    void func1(float a = float.init) {
+        float b = float.init;
+    	assert(a is float.init);
+    };
+
+    void func2(float a = float.init) {
+    	float b = float.init;
+    	assert(a is b);
+    };
+
 	return true;
 }
 
