@@ -1021,6 +1021,7 @@ RETURN_IT:
         asmerr("bad type/size of operands '%s'", asm_opstr(pop));
         return ptbNull;
     }
+    assert(ptbRet.pptb0);
     return ptbRet;
 }
 
