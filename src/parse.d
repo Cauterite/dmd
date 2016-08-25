@@ -7018,6 +7018,20 @@ final class Parser : Lexer
         //printf("parsePrimaryExp(): loc = %d\n", loc.linnum);
         switch (token.value)
         {
+        case TOKif:
+            goto default;
+            nextToken();
+            check(TOKlparen);
+
+            Expression[2][] pairs; // [predicate,consequent] tuples
+            while (1) {
+                Expression pred;
+                if (peekNext == TOKelse)
+                    pred = new IntegerExp(loc, 1, Type.tbool); // replace `else` with `true`
+                else
+                    pred = parseOrOrExp();
+            }
+            break;
         case TOKidentifier:
             {
                 Token* t1 = peek(&token);
