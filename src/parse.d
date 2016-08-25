@@ -7020,18 +7020,67 @@ final class Parser : Lexer
         {
         case TOKif:
             goto default;
-            nextToken();
+            // IfExpression
+            // `if(a : b, c : d, e : f, ... else z)`
+            check(TOKif);
             check(TOKlparen);
 
-            Expression[2][] pairs; // [predicate,consequent] tuples
-            while (1) {
+            CondExp firstPair; // first (pred,conseq) pair
+            CondExp prevPair; // previous (pred,conseq) pair
+
+            while (1) // iterate over the predicates and consequents
+            {
+                const loc = token.loc;
+
                 Expression pred;
                 if (peekNext == TOKelse)
-                    pred = new IntegerExp(loc, 1, Type.tbool); // replace `else` with `true`
+                {
+                    check(TOKelse);
+                    pred = new IntegerExp(loc, 1, Type.tbool); // rewrite `else` as `true`
+                    if (peekNext == TOKcolon) // optional `:`
+                        check(TOKcolon);
+                }
                 else
+                {
                     pred = parseOrOrExp();
+                    check(TOKcolon); // mandatory `:`
+                }
+
+                auto conseq = parseAssignExp();
+
+                auto newPair = new CondExp(loc, pred, conseq, null);
+                if (!firstPair)
+                {
+                    firstPair = newPair;
+                    prevPair = firstPair;
+                }
+                else
+                {
+                    // append to the linked-list of pairs
+                    prevPair.e2 = newPair;
+                    prevPair = prevPair.e2;
+                }
+
+                if (peekNext == TOKcomma)
+                {
+                    check(TOKcomma);
+                    if (peekNext == TOKrparen) // allow trailing `,`
+                        break;
+                    continue;
+                }
+                else if (peekNext == TOKelse) // `,` not needed if the next predicate is `else`
+                    continue;
+
+                break;
             }
+
+            check(TOKrparen);
+
+            // TODO: various checks
+
+            e = firstPair;
             break;
+
         case TOKidentifier:
             {
                 Token* t1 = peek(&token);
