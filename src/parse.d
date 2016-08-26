@@ -7057,16 +7057,10 @@ final class Parser : Lexer
 
 					auto newPair = new CondExp(predLoc, pred, conseq, null);
 					if (!firstPair)
-					{
 						firstPair = newPair;
-						lastPair = firstPair;
-					}
 					else
-					{
-						// append to the linked-list of pairs
 						lastPair.e2 = newPair;
-						lastPair = newPair;
-					}
+					lastPair = newPair;
 
 					if (token.value == TOKcomma)
 					{
