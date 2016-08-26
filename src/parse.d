@@ -7019,68 +7019,96 @@ final class Parser : Lexer
         switch (token.value)
         {
         case TOKif:
-            goto default;
-            // IfExpression
-            // `if(a : b, c : d, e : f, ... else z)`
-            check(TOKif);
-            check(TOKlparen);
-
-            CondExp firstPair; // first (pred,conseq) pair
-            CondExp prevPair; // previous (pred,conseq) pair
-
-            while (1) // iterate over the predicates and consequents
             {
-                const loc = token.loc;
-
-                Expression pred;
-                if (peekNext == TOKelse)
+                // IfExpression
+                // `if(a : b, c : d, e : f, ... else z)`
+                // parsed into a `CondExp`
+                check(TOKif);
+                check(TOKlparen);
+    
+                // build a chain of `CondExp` objects
+                CondExp firstPair; // first (pred,conseq) pair
+                CondExp lastPair; // previous (pred,conseq) pair
+    
+                while (1) // iterate over the predicates and consequents
                 {
-                    check(TOKelse);
-                    pred = new IntegerExp(loc, 1, Type.tbool); // rewrite `else` as `true`
-                    if (peekNext == TOKcolon) // optional `:`
-                        check(TOKcolon);
+                    const loc = token.loc;
+    
+                    Expression pred;
+                    if (peekNext == TOKelse)
+                    {
+                        check(TOKelse);
+                        pred = new IntegerExp(loc, 1, Type.tbool); // rewrite `else` as `true`
+                        if (peekNext == TOKcolon) // optional `:`
+                            check(TOKcolon);
+                    }
+                    else
+                    {
+                        pred = parseOrOrExp();
+                        check(TOKcolon); // mandatory `:`
+                    }
+    
+                    auto conseq = parseAssignExp();
+    
+                    auto newPair = new CondExp(loc, pred, conseq, null);
+                    if (!firstPair)
+                    {
+                        firstPair = newPair;
+                        lastPair = firstPair;
+                    }
+                    else
+                    {
+                        // append to the linked-list of pairs
+                        lastPair.e2 = newPair;
+                        lastPair = lastPair.e2;
+                    }
+    
+                    if (peekNext == TOKcomma)
+                    {
+                        check(TOKcomma);
+                        if (peekNext == TOKrparen) // allow trailing `,`
+                            break;
+                        continue;
+                    }
+                    else if (peekNext == TOKelse) // `,` not needed if the next predicate is `else`
+                        continue;
+    
+                    break;
                 }
-                else
-                {
-                    pred = parseOrOrExp();
-                    check(TOKcolon); // mandatory `:`
-                }
-
-                auto conseq = parseAssignExp();
-
-                auto newPair = new CondExp(loc, pred, conseq, null);
-                if (!firstPair)
-                {
-                    firstPair = newPair;
-                    prevPair = firstPair;
-                }
-                else
-                {
-                    // append to the linked-list of pairs
-                    prevPair.e2 = newPair;
-                    prevPair = prevPair.e2;
-                }
-
-                if (peekNext == TOKcomma)
-                {
-                    check(TOKcomma);
-                    if (peekNext == TOKrparen) // allow trailing `,`
-                        break;
-                    continue;
-                }
-                else if (peekNext == TOKelse) // `,` not needed if the next predicate is `else`
-                    continue;
-
+    
+                check(TOKrparen);
+                const endLoc = token.loc;
+    
+                assert(!lastPair.e2); // list is null-terminated at this point
+    
+                // rewrite
+                // `if(foo : bar)`
+                // to
+                // `foo ? bar : (function typeof(bar)() {assert(0);})()`
+    
+                auto failFunc = new FuncLiteralDeclaration(loc, endLoc,
+                    new TypeFunction(
+                        new Parameters(),
+                        new TypeTypeof(loc, lastPair.e1.syntaxCopy), /* ret type */
+                        0, /* not variadic */
+                        LINK.def
+                    ),
+                    TOKfunction, /* not a delegate */
+                    null /* not a foreach body */
+                );
+                failFunc.fbody = new ReturnStatement(loc,
+                    new AssertExp(loc,
+                        new IntegerExp(loc, 0, Type.tbool),
+                        new StringExp(loc,
+                            cast(char*) `none of the conditions were true`.ptr
+                        )
+                    )
+                );
+    
+                lastPair.e2 = new CallExp(loc, failFunc, new Expressions());
+                e = firstPair;
                 break;
             }
-
-            check(TOKrparen);
-
-            // TODO: various checks
-
-            e = firstPair;
-            break;
-
         case TOKidentifier:
             {
                 Token* t1 = peek(&token);
