@@ -5306,6 +5306,10 @@ final class Parser : Lexer
                 Parameter param = null;
                 Expression condition;
 
+				// check whether it's an if-expression
+				if (peekPastParen(peek(&token)).value == TOKsemicolon)
+					goto Lexp;
+
                 nextToken();
                 check(TOKlparen);
 
