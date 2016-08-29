@@ -7685,6 +7685,13 @@ final class Parser : Lexer
                 }
                 break;
             }
+        case TOKdo:
+            {
+                nextToken();
+                check(TOKlparen);
+                assert(0);
+                break;
+            }
         case TOKwild:
         case TOKshared:
         case TOKconst:
