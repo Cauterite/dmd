@@ -5128,6 +5128,10 @@ final class Parser : Lexer
 
         case TOKdo:
             {
+				// check whether it's a do-expression
+				if (peek(&token).value == TOKlparen)
+                    goto Lexp;
+
                 Statement _body;
                 Expression condition;
 
@@ -7688,8 +7692,11 @@ final class Parser : Lexer
         case TOKdo:
             {
                 nextToken();
-                check(TOKlparen);
-                assert(0);
+                Expressions* xs = parseArguments();
+                foreach (x; (*xs)[])
+                    e = e.combine(x);
+                if (!e)
+                    error(loc, "do-expression requires at least one argument");
                 break;
             }
         case TOKwild:
