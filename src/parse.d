@@ -7696,7 +7696,10 @@ final class Parser : Lexer
                 foreach (x; (*xs)[])
                     e = Expression.combine(e, x);
                 if (!e)
+                {
                     error(loc, "do-expression requires at least one argument");
+                    return null;
+                }
                 break;
             }
         case TOKwild:
