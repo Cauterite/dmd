@@ -7694,7 +7694,7 @@ final class Parser : Lexer
                 nextToken();
                 Expressions* xs = parseArguments();
                 foreach (x; (*xs)[])
-                    e = Expression.combine(e, x);
+                    e = e ? new CommaExp(e.loc, e, x, true) : x;
                 if (!e)
                 {
                     error(loc, "do-expression requires at least one argument");
