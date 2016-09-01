@@ -4177,7 +4177,7 @@ static OPND *asm_una_exp()
                 error(asmstate.loc, "use offsetof instead of offset");
                 goto Loffset;
             }
-            if (asmtok->ident == Id::offsetof)
+            if (asmtok->ident == Id::_offsetof)
             {
             Loffset:
                 asm_token();

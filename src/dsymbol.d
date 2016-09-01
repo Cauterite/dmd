@@ -202,6 +202,7 @@ extern (C++) class Dsymbol : RootObject
     PASS semanticRun;
 
     DeprecatedDeclaration depdecl;           // customized deprecation message
+    bool isDeprecatedMemberIdent;            // is it .init ?
     UserAttributeDeclaration userAttribDecl;    // user defined attributes
 
     // !=null means there's a ddoc unittest associated with this symbol
@@ -303,7 +304,7 @@ extern (C++) class Dsymbol : RootObject
 
     final void checkDeprecated(Loc loc, Scope* sc)
     {
-        if (global.params.useDeprecated != 1 && isDeprecated())
+        if (global.params.useDeprecated != 1 && (isDeprecated() || isDeprecatedMemberIdent))
         {
             // Don't complain if we're inside a deprecated symbol's scope
             for (Dsymbol sp = sc.parent; sp; sp = sp.parent)
@@ -326,10 +327,16 @@ extern (C++) class Dsymbol : RootObject
                 if (message)
                     break;
             }
-            if (message)
-                deprecation(loc, "is deprecated - %s", message);
-            else
-                deprecation(loc, "is deprecated");
+
+            if (isDeprecated())
+            {
+                if (message)
+                    deprecation(loc, "is deprecated - %s", message);
+                else
+                    deprecation(loc, "is deprecated");
+            }
+            else if (isDeprecatedMemberIdent)
+                deprecation(".%s property cannot be redefined", ident.toChars);
         }
     L1:
         Declaration d = isDeclaration();
@@ -622,9 +629,32 @@ extern (C++) class Dsymbol : RootObject
                     errors = true;
                 }
             }
+
+            // nothing can redefine .stringof or .mangleof
+            if (ident == Id._stringof)
+                deprecation(".%s property cannot be redefined", ident.toChars());
+            if (ident == Id._mangleof)
+            {
+                error(".%s property cannot be redefined", ident.toChars());
+                errors = true;
+            }
+
+            // aggregates cannot redefine .tupleof - the field would be inaccessible anyway
+            if (sds.isAggregateDeclaration() && ident == Id._tupleof)
+                deprecation(".%s property cannot be redefined", ident.toChars());
+
+            // aggregates and enums cannot redefine .init, .offsetof, .sizeof or .alignof
             if (sds.isAggregateDeclaration() || sds.isEnumDeclaration())
             {
-                if (ident == Id.__sizeof || ident == Id.__xalignof || ident == Id._mangleof)
+                // some phobos and druntime types still have .init redefs
+                // so the deprecation needs to be handled differently
+                if (ident == Id._init)
+                    isDeprecatedMemberIdent = true;
+
+                if (ident == Id._offsetof)
+                    deprecation(".%s property cannot be redefined", ident.toChars());
+
+                if (ident == Id.__sizeof || ident == Id.__xalignof)
                 {
                     error(".%s property cannot be redefined", ident.toChars());
                     errors = true;

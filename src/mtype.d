@@ -2542,7 +2542,7 @@ extern (C++) abstract class Type : RootObject
                 e = e.semantic(&sc);
             }
         }
-        else if (ident == Id.stringof)
+        else if (ident == Id._stringof)
         {
             const s = toChars();
             e = new StringExp(loc, cast(char*)s);
@@ -2599,7 +2599,7 @@ extern (C++) abstract class Type : RootObject
         }
         if (v)
         {
-            if (ident == Id.offsetof)
+            if (ident == Id._offsetof)
             {
                 if (v.isField())
                 {
@@ -2623,7 +2623,7 @@ extern (C++) abstract class Type : RootObject
                 goto Lreturn;
             }
         }
-        if (ident == Id.stringof)
+        if (ident == Id._stringof)
         {
             /* Bugzilla 3796: this should demangle e->type->deco rather than
              * pretty-printing the type.
@@ -2663,8 +2663,8 @@ extern (C++) abstract class Type : RootObject
             ident != Id.__xalignof &&
             ident != Id._init &&
             ident != Id._mangleof &&
-            ident != Id.stringof &&
-            ident != Id.offsetof &&
+            ident != Id._stringof &&
+            ident != Id._offsetof &&
             // Bugzilla 15045: Don't forward special built-in member functions.
             ident != Id.ctor &&
             ident != Id.dtor &&
@@ -4387,7 +4387,7 @@ extern (C++) final class TypeVector : Type
             e.type = basetype;
             return e;
         }
-        if (ident == Id._init || ident == Id.offsetof || ident == Id.stringof)
+        if (ident == Id._init || ident == Id._offsetof || ident == Id._stringof)
         {
             // init should return a new VectorExp (Bugzilla 12776)
             // offsetof does not work on a cast expression, so use e directly
@@ -8786,7 +8786,7 @@ extern (C++) final class TypeEnum : Type
         {
             e = defaultInitLiteral(loc);
         }
-        else if (ident == Id.stringof)
+        else if (ident == Id._stringof)
         {
             const s = toChars();
             e = new StringExp(loc, cast(char*)s);

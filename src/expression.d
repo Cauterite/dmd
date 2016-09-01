@@ -8588,7 +8588,7 @@ extern (C++) final class DotIdExp : UnaExp
         {
             e1 = resolvePropertiesX(sc, e1);
         }
-        if (e1.op == TOKtuple && ident == Id.offsetof)
+        if (e1.op == TOKtuple && ident == Id._offsetof)
         {
             /* 'distribute' the .offsetof to each of the tuple elements.
              */
@@ -8599,7 +8599,7 @@ extern (C++) final class DotIdExp : UnaExp
             {
                 Expression e = (*te.exps)[i];
                 e = e.semantic(sc);
-                e = new DotIdExp(e.loc, e, Id.offsetof);
+                e = new DotIdExp(e.loc, e, Id._offsetof);
                 (*exps)[i] = e;
             }
             // Don't evaluate te->e0 in runtime
@@ -8616,7 +8616,7 @@ extern (C++) final class DotIdExp : UnaExp
         }
 
         // Bugzilla 14416: Template has no built-in properties except for 'stringof'.
-        if ((e1.op == TOKdottd || e1.op == TOKtemplate) && ident != Id.stringof)
+        if ((e1.op == TOKdottd || e1.op == TOKtemplate) && ident != Id._stringof)
         {
             error("template %s does not have property '%s'", e1.toChars(), ident.toChars());
             return new ErrorExp();
@@ -8858,7 +8858,7 @@ extern (C++) final class DotIdExp : UnaExp
                 }
                 assert(0);
             }
-            else if (ident == Id.stringof)
+            else if (ident == Id._stringof)
             {
                 const p = ie.toChars();
                 e = new StringExp(loc, cast(char*)p, strlen(p));
@@ -8878,7 +8878,7 @@ extern (C++) final class DotIdExp : UnaExp
                 error("undefined identifier '%s' in %s '%s'", ident.toChars(), ie.sds.kind(), ie.sds.toPrettyChars());
             return new ErrorExp();
         }
-        else if (t1b.ty == Tpointer && e1.type.ty != Tenum && ident != Id._init && ident != Id.__sizeof && ident != Id.__xalignof && ident != Id.offsetof && ident != Id._mangleof && ident != Id.stringof)
+        else if (t1b.ty == Tpointer && e1.type.ty != Tenum && ident != Id._init && ident != Id.__sizeof && ident != Id.__xalignof && ident != Id._offsetof && ident != Id._mangleof && ident != Id._stringof)
         {
             Type t1bn = t1b.nextOf();
             if (flag)
